@@ -3,11 +3,15 @@ from NetworkSecurity.exception.exception import NetworkSecurityException
 from NetworkSecurity.logging.logger import logging
 import os, sys
 import numpy as np
-# import dill
 import pickle
 
 
 def read_yaml_file(file_path: str) -> dict:
+    """
+    we need this function for validation compenent to 
+    (1) test and compare the number of columns.
+    (2) for testing the existance of numerical features.
+    """
     try:
         with open(file_path, "rb") as yaml_file:
             return yaml.safe_load(yaml_file)
@@ -22,5 +26,36 @@ def write_yaml_file(file_path: str, content: object, replace: bool = False) -> N
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         with open(file_path, "w") as file:
             yaml.dump(content, file)
+    except Exception as e:
+        raise NetworkSecurityException(e, sys)
+    
+
+
+def save_numpy_array_data(file_path:str, array: np.array):
+    """
+    save numpy array data to file
+    path_file: location of file to save
+    array: data to save
+    it is better to save data in array because it is better for 
+    ML algorithms (Most Alogo use it) and (Faster Than DataFrame).
+    """
+
+    try:
+        dir_path = os.path.dirname(file_path)
+        os.makedirs(dir_path, exist_ok=True)
+        with open(file_path,"wb") as file_obj:
+            np.save(file_obj, array)
+    except Exception as e:
+        raise NetworkSecurityException(e, sys)
+
+
+def save_object(file_path: str, obj: object)->None:
+    try:
+        logging.info("Entered the save_object method of the MainUtils class")
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with open(file_path, "wb") as file_obj:
+            pickle.dump(obj, file_obj)
+        logging.info("Exited the save_object method of the MainUtils class")
+        
     except Exception as e:
         raise NetworkSecurityException(e, sys)
