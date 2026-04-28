@@ -1,6 +1,8 @@
 import yaml
 from NetworkSecurity.exception.exception import NetworkSecurityException
 from NetworkSecurity.logging.logger import logging
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import accuracy_score
 import os, sys
 import numpy as np
 import pickle
@@ -47,6 +49,14 @@ def save_numpy_array_data(file_path:str, array: np.array):
             np.save(file_obj, array)
     except Exception as e:
         raise NetworkSecurityException(e, sys)
+    
+
+def load_numpy_array_data(file_path:str)->np.array:
+    try:
+        with open(file_path, "rb") as file_obj:
+            return np.load(file_obj)
+    except Exception as e:
+        raise NetworkSecurityException(e, sys) from e
 
 
 def save_object(file_path: str, obj: object)->None:
@@ -57,5 +67,47 @@ def save_object(file_path: str, obj: object)->None:
             pickle.dump(obj, file_obj)
         logging.info("Exited the save_object method of the MainUtils class")
         
+    except Exception as e:
+        raise NetworkSecurityException(e, sys)
+    
+
+
+def load_object(file_path:str)->object:
+    try:
+        if not os.path.exists(file_path):
+            raise Exception(f"file path: ({file_path}) does not exist")
+        with open(file_path, "rb") as file_obj:
+            print(file_obj)
+            return pickle.load(file_obj)
+
+    except Exception as e:
+        raise NetworkSecurityException(e, sys) from e
+    
+
+
+def evaluate_model(x_train,y_train,x_test,y_test,models:dict, params:dict):
+    try:
+        report = {}
+        for i in range(len(list(models))):
+            model = list(models.values())[i]
+            param = params[list(models.keys())[i]]
+
+            gs = GridSearchCV(model, param, cv=3)
+            gs.fit(x_train, y_train)
+
+            model.set_params(**gs.best_params_)
+            model.fit(x_train, y_train)
+
+            y_train_pred = model.predict(x_train)
+            y_test_pred = model.predict(x_test)
+
+            train_model_score = accuracy_score(y_train, y_train_pred)
+            test_model_score = accuracy_score(y_test, y_test_pred)
+
+            report[list(models.keys())[i]] = test_model_score
+
+            return report
+
+
     except Exception as e:
         raise NetworkSecurityException(e, sys)
