@@ -35,9 +35,7 @@ class ModelTrainer:
             raise NetworkSecurityException(e, sys)
         
     def track_mlflow(self, best_model, classification_metric):
-        # 1. Ensure it connects to your local server
-        mlflow.set_tracking_uri("http://127.0.0.1:5000")
-        
+    
         # 2. Give your experiment a name so it's easy to find
         mlflow.set_experiment("Network_Security_Model_Training")
 
@@ -114,7 +112,8 @@ class ModelTrainer:
 
         network_model = NetworkModel(preprocessor, best_model)
         save_object(self.model_trainer_config.trained_model_file_path, network_model)
-
+        save_object("final_models/model.pkl", best_model)
+        save_object("final_models/preprocessor.pkl", preprocessor)
 
         ## Model Trainer Artifact
         model_trainer_artifact = ModelTrainerArtifact(self.model_trainer_config.trained_model_file_path,
@@ -126,6 +125,13 @@ class ModelTrainer:
 
     def initiate_model_trainer(self)->ModelTrainerArtifact:
         try:
+            import dagshub
+
+            dagshub.init(
+            repo_owner='MohamedElbadawy1',
+            repo_name='Network_Security',
+            mlflow=True
+        )
             train_file_path = self.data_transformation_artifact.transformed_train_file_path
             test_file_path = self.data_transformation_artifact.transformed_test_file_path
             
