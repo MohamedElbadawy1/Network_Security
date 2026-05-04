@@ -25,10 +25,12 @@ from NetworkSecurity.entity.artifact_entity import(
     ModelTrainerArtifact
 )
 
-
+from NetworkSecurity.Constants.training_pipeline import TRAINING_BUCKET_NAME
+from NetworkSecurity.cloud.s3_syncer import S3Sync
 class TrainingPipeline:
     def __init__(self):
         self.train_pipeline_config = TrainingPipelineConfig()
+        self.s3_sync = S3Sync()
 
 
     ## Data Ingestion Init.
@@ -75,6 +77,7 @@ class TrainingPipeline:
             raise NetworkSecurityException(e, sys)
 
 
+
     ## Model Trainer Init.
     def start_model_trainer(self, data_transformation_artifact:DataTransformationArtifact):
         try:
@@ -89,6 +92,29 @@ class TrainingPipeline:
             raise NetworkSecurityException(e, sys)  
         
 
+
+    ## Sync the local artifact with s3 bucket
+##    def sync_artifact_dir_to_s3(self):
+##        try:
+##            aws_bucket_url = f"s3://{TRAINING_BUCKET_NAME}/artifact/{self.train_pipeline_config.timestamp}"
+##            self.s3_sync.sync_folder_to_s3(folder=self.train_pipeline_config.artifact_dir, aws_bucket_url=aws_bucket_url )
+##
+##        except Exception as e:
+##            raise NetworkSecurityException(e, sys)
+
+
+
+    ## Sync the local final_model with s3 bucket
+##    def sync_saved_model_dir_to_s3(self):
+##        try:
+##            aws_bucket_url = f"s3://{TRAINING_BUCKET_NAME}/final_models/{self.train_pipeline_config.timestamp}"
+##            self.s3_sync.sync_folder_to_s3(folder=self.train_pipeline_config.model_dir, aws_bucket_url=aws_bucket_url )
+##
+##        except Exception as e:
+##            raise NetworkSecurityException(e, sys)
+
+
+
     ## Run the Pipeline
     def run_pipeline(self):
         try:
@@ -96,6 +122,10 @@ class TrainingPipeline:
             data_validation_artifact = self.start_data_validation(data_ingestion_artifact)
             data_transformation_artifact = self.start_data_transforamtion(data_validation_artifact)
             model_trainer_artifact = self.start_model_trainer(data_transformation_artifact)
+            
+            ## self.sync_artifact_dir_to_s3()
+            ## self.sync_saved_model_dir_to_s3()
+            
             return model_trainer_artifact
         except Exception as e:
             raise NetworkSecurityException(e, sys)
